@@ -80,15 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return isValid;
   }
 
-  function loadPrestamos() {
-    const status = filterStatus.value;
-    let url = 'http://localhost:3000/api/prestamos';
-
-    if (status !== 'all') {
-      url += `?estado=${status}`;
-    }
-
-    function loadPrestamos() {
+function loadPrestamos() {
   const status = filterStatus.value;
   let url = 'http://localhost:3000/api/prestamos';
 
@@ -108,9 +100,15 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!response.ok) throw new Error('Error al cargar préstamos');
     return response.json();
   })
-  // ... resto del código
+  .then(data => {
+    prestamos = data;
+    renderPrestamos();
+  })
+  .catch(error => {
+    console.error('Error al cargar préstamos:', error);
+    alert('Error al cargar préstamos: ' + error.message);
+  });
 }
-  }
 
   function renderPrestamos() {
     prestamosBody.innerHTML = '';

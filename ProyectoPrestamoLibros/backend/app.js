@@ -6,14 +6,13 @@ require('dotenv').config();
 
 const app = express();
 
+// ✅ Middleware CORS
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type','Autorization'],
-  credentials: false
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.options('*', cors());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -22,6 +21,7 @@ app.use((req, res, next) => {
   next();
 });
 
+// ✅ Conexión MongoDB Atlas o local
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/prestamos-libros')
 .then(() => {
   console.log('MongoDB conectado en:', mongoose.connection.host);
@@ -40,36 +40,18 @@ mongoose.connection.on('error', (err) => {
   console.error('Error con Mongoose:', err);
 });
 
+// ✅ Modelo
 const Prestamo = mongoose.model('Prestamo', new mongoose.Schema({
-  titulo: { 
-    type: String, 
-    required: [true, 'El título es obligatorio'],
-    trim: true
-  },
-  autor: {
-    type: String,
-    required: [true, 'El autor es obligatorio'],
-    trim: true
-  },
-  amigo: {
-    type: String,
-    required: [true, 'El nombre del amigo es obligatorio'],
-    trim: true
-  },
-  fechaPrestamo: {
-    type: Date,
-    required: true,
-    default: Date.now
-  },
+  titulo: { type: String, required: [true, 'El título es obligatorio'], trim: true },
+  autor: { type: String, required: [true, 'El autor es obligatorio'], trim: true },
+  amigo: { type: String, required: [true, 'El nombre del amigo es obligatorio'], trim: true },
+  fechaPrestamo: { type: Date, required: true, default: Date.now },
   fechaLimite: Date,
   fechaDevolucion: Date,
-  estado: {
-    type: String,
-    enum: ['Prestado', 'Devuelto'],
-    default: 'Prestado'
-  }
+  estado: { type: String, enum: ['Prestado', 'Devuelto'], default: 'Prestado' }
 }));
 
+// ✅ Endpoints
 app.get('/', (req, res) => {
   res.send('Backend funcionando correctamente');
 });
@@ -101,9 +83,9 @@ app.post('/api/prestamos', async (req, res) => {
     res.status(201).json(prestamo);
   } catch (err) {
     console.error('Error al crear préstamo:', err);
-    res.status(400).json({ 
-      error: err.message.includes('validation') 
-        ? 'Datos inválidos: ' + err.message 
+    res.status(400).json({
+      error: err.message.includes('validation')
+        ? 'Datos inválidos: ' + err.message
         : 'Error al guardar el préstamo'
     });
   }
@@ -119,8 +101,8 @@ app.put('/api/prestamos/:id', async (req, res) => {
     }
 
     const prestamo = await Prestamo.findByIdAndUpdate(
-      id, 
-      datosActualizados, 
+      id,
+      datosActualizados,
       { new: true, runValidators: true }
     );
 
@@ -138,11 +120,9 @@ app.put('/api/prestamos/:id', async (req, res) => {
 app.delete('/api/prestamos/:id', async (req, res) => {
   try {
     const prestamo = await Prestamo.findByIdAndDelete(req.params.id);
-    
     if (!prestamo) {
       return res.status(404).json({ error: 'Préstamo no encontrado' });
     }
-
     res.json({ message: 'Préstamo eliminado correctamente' });
   } catch (err) {
     console.error('Error al eliminar préstamo:', err);
@@ -171,5 +151,5 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`\nServidor en http://localhost:${PORT}`);
+  console.log(`\nServidor escuchando en http://localhost:${PORT}`);
 });
