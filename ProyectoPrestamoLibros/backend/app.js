@@ -6,7 +6,7 @@ require('dotenv').config();
 
 const app = express();
 
-// ✅ Middleware CORS
+
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -21,7 +21,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ Conexión MongoDB Atlas o local
+
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/prestamos-libros')
 .then(() => {
   console.log('MongoDB conectado en:', mongoose.connection.host);
@@ -40,7 +40,7 @@ mongoose.connection.on('error', (err) => {
   console.error('Error con Mongoose:', err);
 });
 
-// ✅ Modelo
+
 const Prestamo = mongoose.model('Prestamo', new mongoose.Schema({
   titulo: { type: String, required: [true, 'El título es obligatorio'], trim: true },
   autor: { type: String, required: [true, 'El autor es obligatorio'], trim: true },
@@ -51,7 +51,7 @@ const Prestamo = mongoose.model('Prestamo', new mongoose.Schema({
   estado: { type: String, enum: ['Prestado', 'Devuelto'], default: 'Prestado' }
 }));
 
-// ✅ Endpoints
+
 app.get('/', (req, res) => {
   res.send('Backend funcionando correctamente');
 });
