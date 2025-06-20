@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
+  const API_BASE = 'https://prestamo-libros-backend.onrender.com/api';
+
   const form = document.getElementById('prestamo-form');
   const prestamosBody = document.getElementById('prestamos-body');
   const filterStatus = document.getElementById('filter-status');
@@ -11,9 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   loadPrestamos();
 
-  filterStatus.addEventListener('change', function () {
-    loadPrestamos();
-  });
+  filterStatus.addEventListener('change', loadPrestamos);
 
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
@@ -44,9 +44,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  cancelBtn.addEventListener('click', function () {
-    resetForm();
-  });
+  cancelBtn.addEventListener('click', resetForm);
 
   function validateForm() {
     let isValid = true;
@@ -80,35 +78,32 @@ document.addEventListener('DOMContentLoaded', function () {
     return isValid;
   }
 
-function loadPrestamos() {
-  const status = filterStatus.value;
-  let url = 'http://localhost:3000/api/prestamos';
+  function loadPrestamos() {
+    const status = filterStatus.value;
+    let url = `${API_BASE}/prestamos`;
 
-  if (status !== 'all') {
-    url += `?estado=${status}`;
+    if (status !== 'all') {
+      url += `?estado=${status}`;
+    }
+
+    fetch(url, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(response => {
+        if (!response.ok) throw new Error('Error al cargar préstamos');
+        return response.json();
+      })
+      .then(data => {
+        prestamos = data;
+        renderPrestamos();
+      })
+      .catch(error => {
+        console.error('Error al cargar préstamos:', error);
+        prestamosBody.innerHTML = '<tr><td colspan="7">No se pudieron cargar los préstamos</td></tr>';
+      });
   }
-
-  fetch(url, {
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  })
-  .then(response => {
-    if (response.status === 401) {
-      throw new Error('No autorizado: Verifica tu conexión');
-    }
-    if (!response.ok) throw new Error('Error al cargar préstamos');
-    return response.json();
-  })
-  .then(data => {
-    prestamos = data;
-    renderPrestamos();
-  })
-  .catch(error => {
-    console.error('Error al cargar préstamos:', error);
-    alert('Error al cargar préstamos: ' + error.message);
-  });
-}
 
   function renderPrestamos() {
     prestamosBody.innerHTML = '';
@@ -149,26 +144,20 @@ function loadPrestamos() {
     });
 
     document.querySelectorAll('.edit-btn').forEach(btn => {
-      btn.addEventListener('click', function () {
-        editPrestamo(this.getAttribute('data-id'));
-      });
+      btn.addEventListener('click', () => editPrestamo(btn.getAttribute('data-id')));
     });
 
     document.querySelectorAll('.delete-btn').forEach(btn => {
-      btn.addEventListener('click', function () {
-        deletePrestamo(this.getAttribute('data-id'));
-      });
+      btn.addEventListener('click', () => deletePrestamo(btn.getAttribute('data-id')));
     });
 
     document.querySelectorAll('.return-btn').forEach(btn => {
-      btn.addEventListener('click', function () {
-        markAsReturned(this.getAttribute('data-id'));
-      });
+      btn.addEventListener('click', () => markAsReturned(btn.getAttribute('data-id')));
     });
   }
 
   function createPrestamo(prestamoData) {
-    return fetch('http://localhost:3000/api/prestamos', {
+    return fetch(`${API_BASE}/prestamos`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -204,7 +193,7 @@ function loadPrestamos() {
   }
 
   function updatePrestamo(id, prestamoData) {
-    return fetch(`http://localhost:3000/api/prestamos/${id}`, {
+    return fetch(`${API_BASE}/prestamos/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -226,7 +215,7 @@ function loadPrestamos() {
   function markAsReturned(id) {
     if (!confirm('¿Marcar este préstamo como devuelto?')) return;
 
-    fetch(`http://localhost:3000/api/prestamos/${id}`, {
+    fetch(`${API_BASE}/prestamos/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -237,7 +226,7 @@ function loadPrestamos() {
         if (!response.ok) throw new Error('Error al marcar como devuelto');
         return response.json();
       })
-      .then(data => {
+      .then(() => {
         alert('Préstamo marcado como devuelto!');
         loadPrestamos();
       })
@@ -250,14 +239,14 @@ function loadPrestamos() {
   function deletePrestamo(id) {
     if (!confirm('¿Estás seguro de eliminar este préstamo?')) return;
 
-    fetch(`http://localhost:3000/api/prestamos/${id}`, {
+    fetch(`${API_BASE}/prestamos/${id}`, {
       method: 'DELETE'
     })
       .then(response => {
         if (!response.ok) throw new Error('Error al eliminar');
         return response.json();
       })
-      .then(data => {
+      .then(() => {
         alert('Préstamo eliminado exitosamente!');
         loadPrestamos();
       })
